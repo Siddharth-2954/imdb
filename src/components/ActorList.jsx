@@ -1,25 +1,48 @@
-import React from 'react'
+import React, { useEffect, useState } from "react";
+import TMDB from "../API";
+import ActorItem from "./ActorItem";
 
-import Card from './Card'
-import FlexContainer from './FlexContainer'
+const ActorList = ({ type, id }) => {
+  const [actors, setActors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-export default function ActorList({ header, actors, onClick }) {
+  useEffect(() => {
+    const fetchActors = async () => {
+      try {
+        const actorData = await TMDB.getActors(type, id); // Fetch actors from TMDB API
+        if (actorData.length === 0) {
+          setError("No actors found");
+        } else {
+          setActors(actorData);
+        }
+      } catch (err) {
+        setError("Error fetching actors");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActors();
+  }, [type, id]);
+
+  if (loading) return <p>Loading actors...</p>;
+  if (error) return <p>{error}</p>;
+
   return (
-    <FlexContainer title={header}>
-      {actors.map(actor => 
-        <div 
-          className="m-2 w-44 cursor-pointer hover:opacity-90" 
-          key={actor.credit_id} 
-          onClick={() => onClick(actor.id)}
-        >
-          <Card
-            id={actor.id} 
-            showTitle={true}
-            title={`${actor.name} ${actor.character ? "(" + actor.character +")" : ""}`}
-            image={actor.profile_path} 
-          />
+    <div>
+      <h2>Cast</h2>
+      {actors.length === 0 ? (
+        <p>No actors found</p>
+      ) : (
+        <div>
+          {actors.map((actor) => (
+            <ActorItem key={actor.id} actor={actor} />
+          ))}
         </div>
       )}
-    </FlexContainer>
-  )
-}
+    </div>
+  );
+};
+
+export default ActorList;
